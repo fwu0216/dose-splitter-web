@@ -19,8 +19,8 @@ HTML_TEMPLATE = '''
         .label-inline { display: inline-block; margin-right: 10px; font-weight: bold; color: #333; }
         .row { display: flex; gap: 10px; align-items: center; }
         .result { font-size: 18px; color: #007aff; font-weight: bold; margin-top: 10px; }
-        button { margin-top: 16px; padding: 10px 16px; font-size: 16px; background-color: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; }
-        .row-btn { display: flex; align-items: center; gap: 10px; }
+        button { margin-top: 0px; padding: 10px 16px; font-size: 16px; background-color: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .row-btn { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -37,9 +37,9 @@ HTML_TEMPLATE = '''
 
         <div class="section">
             <h3 style="color:#007aff; border-left: 4px solid #007aff; padding-left: 6px;">目标设置</h3>
-            <label>目标剂量 (mCi):
+            <label>目标剂量与计算:
                 <div class="row-btn">
-                    <input type="number" step="0.01" name="dose" id="dose" value="{{ dose }}">
+                    <input type="number" step="0.01" name="dose" id="dose" value="{{ dose }}" style="flex:1;">
                     <button type="submit">开始计算</button>
                 </div>
             </label>
@@ -68,7 +68,6 @@ HTML_TEMPLATE = '''
 <script>
     const fields = ['nuclide', 'activity', 'volume', 'init_time', 'dose', 'target_time'];
 
-    // 恢复本地保存的数据
     window.onload = () => {
         fields.forEach(id => {
             const saved = localStorage.getItem(id);
@@ -78,7 +77,6 @@ HTML_TEMPLATE = '''
         });
     };
 
-    // 监听并保存到 localStorage
     fields.forEach(id => {
         document.getElementById(id).addEventListener('input', e => {
             localStorage.setItem(id, e.target.value);
@@ -97,7 +95,6 @@ def calculate_volume(dose, concentration):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # 默认值
     activity = request.form.get('activity', '178.8')
     volume = request.form.get('volume', '10')
     dose = request.form.get('dose', '7.9')
@@ -114,7 +111,7 @@ def index():
         current_activity = decay_activity(float(activity), elapsed, half_life)
         concentration = current_activity / float(volume)
         result_volume = round(calculate_volume(float(dose), concentration), 3)
-    except Exception as e:
+    except Exception:
         result_volume = None
 
     return render_template_string(HTML_TEMPLATE,
@@ -128,5 +125,5 @@ def index():
 
 if __name__ == '__main__':
     import os
-    port = int(os.environ.get('PORT', 10000))  # Render 会提供环境变量 PORT
+    port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port, debug=False)
