@@ -19,10 +19,21 @@ HTML_TEMPLATE = '''
         .label-inline { display: inline-block; margin-right: 10px; font-weight: bold; color: #333; }
         .row { display: flex; gap: 10px; align-items: center; }
         .result { font-size: 18px; color: #007aff; font-weight: bold; margin-top: 10px; }
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0df3f3 (添加目标时间 +5min +10min +15min +20min 按钮)
         button { padding: 10px 16px; font-size: 16px; background-color: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; }
         .row-btn { display: flex; align-items: center; gap: 10px; }
         .time-buttons { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
         .time-buttons button { flex: 1; background-color: #e5f0ff; color: #007aff; }
+<<<<<<< HEAD
+=======
+        button { margin-top: 0px; padding: 10px 16px; font-size: 16px; background-color: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .row-btn { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+>>>>>>> 5bdc833 (修复 host 监听地址为 0.0.0.0)
+=======
+>>>>>>> a0df3f3 (添加目标时间 +5min +10min +15min +20min 按钮)
     </style>
 </head>
 <body>
@@ -39,6 +50,7 @@ HTML_TEMPLATE = '''
 
         <div class="section">
             <h3 style="color:#007aff; border-left: 4px solid #007aff; padding-left: 6px;">目标设置</h3>
+<<<<<<< HEAD
             <label>目标剂量 (mCi):
                 <div class="row-btn">
                     <input type="number" step="0.01" name="dose" id="dose" value="{{ dose }}">
@@ -57,6 +69,17 @@ HTML_TEMPLATE = '''
                 <button type="button" onclick="addMinutes(20)">+20min</button>
             </div>
 
+=======
+            <label>目标剂量与计算:
+                <div class="row-btn">
+                    <input type="number" step="0.01" name="dose" id="dose" value="{{ dose }}" style="flex:1;">
+                    <button type="submit">开始计算</button>
+                </div>
+            </label>
+            <label>目标分装时间:
+                <input type="time" name="target_time" id="target_time" value="{{ target_time }}">
+            </label>
+>>>>>>> 5bdc833 (修复 host 监听地址为 0.0.0.0)
             {% if result_volume %}
                 <div class="result">目标所需体积：{{ result_volume }} mL</div>
             {% endif %}
@@ -79,7 +102,10 @@ HTML_TEMPLATE = '''
 <script>
     const fields = ['nuclide', 'activity', 'volume', 'init_time', 'dose', 'target_time'];
 
+<<<<<<< HEAD
     // 恢复本地保存的数据
+=======
+>>>>>>> 5bdc833 (修复 host 监听地址为 0.0.0.0)
     window.onload = () => {
         fields.forEach(id => {
             const saved = localStorage.getItem(id);
@@ -89,12 +115,20 @@ HTML_TEMPLATE = '''
         });
     };
 
+<<<<<<< HEAD
+<<<<<<< HEAD
     // 保存到 localStorage
+=======
+>>>>>>> 5bdc833 (修复 host 监听地址为 0.0.0.0)
+=======
+    // 保存到 localStorage
+>>>>>>> a0df3f3 (添加目标时间 +5min +10min +15min +20min 按钮)
     fields.forEach(id => {
         document.getElementById(id).addEventListener('input', e => {
             localStorage.setItem(id, e.target.value);
         });
     });
+<<<<<<< HEAD
 
     // 增加时间函数
     function addMinutes(mins) {
@@ -106,6 +140,8 @@ HTML_TEMPLATE = '''
         timeInput.value = newTime;
         localStorage.setItem("target_time", newTime);
     }
+=======
+>>>>>>> 5bdc833 (修复 host 监听地址为 0.0.0.0)
 </script>
 </body>
 </html>
@@ -119,7 +155,14 @@ def calculate_volume(dose, concentration):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+<<<<<<< HEAD
+<<<<<<< HEAD
     # 获取数据
+=======
+>>>>>>> 5bdc833 (修复 host 监听地址为 0.0.0.0)
+=======
+    # 获取数据
+>>>>>>> a0df3f3 (添加目标时间 +5min +10min +15min +20min 按钮)
     activity = request.form.get('activity', '178.8')
     volume = request.form.get('volume', '10')
     dose = request.form.get('dose', '7.9')
@@ -136,7 +179,15 @@ def index():
         current_activity = decay_activity(float(activity), elapsed, half_life)
         concentration = current_activity / float(volume)
         result_volume = round(calculate_volume(float(dose), concentration), 3)
+<<<<<<< HEAD
+<<<<<<< HEAD
     except:
+=======
+    except Exception:
+>>>>>>> 5bdc833 (修复 host 监听地址为 0.0.0.0)
+=======
+    except:
+>>>>>>> a0df3f3 (添加目标时间 +5min +10min +15min +20min 按钮)
         result_volume = None
 
     return render_template_string(HTML_TEMPLATE,
@@ -151,9 +202,13 @@ def index():
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 10000))
+<<<<<<< HEAD
     app.run(host='0.0.0.0', port=port)
     
 #if __name__ == '__main__':
  #   import os
   #  port = int(os.environ.get('PORT', 10000))
    # app.run(host='0.0.0.0', port=port, debug=False)
+=======
+    app.run(host='0.0.0.0', port=port, debug=False)
+>>>>>>> 5bdc833 (修复 host 监听地址为 0.0.0.0)
