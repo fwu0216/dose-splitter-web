@@ -19,8 +19,10 @@ HTML_TEMPLATE = '''
         .label-inline { display: inline-block; margin-right: 10px; font-weight: bold; color: #333; }
         .row { display: flex; gap: 10px; align-items: center; }
         .result { font-size: 18px; color: #007aff; font-weight: bold; margin-top: 10px; }
-        button { margin-top: 0px; padding: 10px 16px; font-size: 16px; background-color: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; }
-        .row-btn { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+        button { margin-top: 16px; padding: 10px 16px; font-size: 16px; background-color: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .row-btn { display: flex; align-items: center; gap: 10px; }
+        .btn-group { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .btn-group button { flex: 1; padding: 8px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -37,15 +39,24 @@ HTML_TEMPLATE = '''
 
         <div class="section">
             <h3 style="color:#007aff; border-left: 4px solid #007aff; padding-left: 6px;">目标设置</h3>
-            <label>目标剂量与计算:
+            <label>目标剂量 (mCi):
                 <div class="row-btn">
-                    <input type="number" step="0.01" name="dose" id="dose" value="{{ dose }}" style="flex:1;">
+                    <input type="number" step="0.01" name="dose" id="dose" value="{{ dose }}">
                     <button type="submit">开始计算</button>
                 </div>
             </label>
+
             <label>目标分装时间:
                 <input type="time" name="target_time" id="target_time" value="{{ target_time }}">
             </label>
+
+            <div class="btn-group">
+                <button type="button" onclick="addMinutes(5)">+5min</button>
+                <button type="button" onclick="addMinutes(10)">+10min</button>
+                <button type="button" onclick="addMinutes(15)">+15min</button>
+                <button type="button" onclick="addMinutes(20)">+20min</button>
+            </div>
+
             {% if result_volume %}
                 <div class="result">目标所需体积：{{ result_volume }} mL</div>
             {% endif %}
@@ -68,6 +79,7 @@ HTML_TEMPLATE = '''
 <script>
     const fields = ['nuclide', 'activity', 'volume', 'init_time', 'dose', 'target_time'];
 
+    // 恢复本地保存的数据
     window.onload = () => {
         fields.forEach(id => {
             const saved = localStorage.getItem(id);
@@ -77,11 +89,25 @@ HTML_TEMPLATE = '''
         });
     };
 
+    // 监听并保存到 localStorage
     fields.forEach(id => {
         document.getElementById(id).addEventListener('input', e => {
             localStorage.setItem(id, e.target.value);
         });
     });
+
+    // 增加目标分装时间按钮功能
+    function addMinutes(mins) {
+        const timeInput = document.getElementById("target_time");
+        let [hours, minutes] = timeInput.value.split(":").map(Number);
+        let total = hours * 60 + minutes + mins;
+        total = total % (24 * 60); // 防止超过 24 小时
+        const newHours = String(Math.floor(total / 60)).padStart(2, '0');
+        const newMinutes = String(total % 60).padStart(2, '0');
+        const newTime = `${newHours}:${newMinutes}`;
+        timeInput.value = newTime;
+        localStorage.setItem('target_time', newTime);
+    }
 </script>
 </body>
 </html>
@@ -126,4 +152,9 @@ def index():
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port)
+
+#if __name__ == '__main__':
+ #   import os
+  #  port = int(os.environ.get('PORT', 10000))
+   # app.run(host='0.0.0.0', port=port, debug=False)
