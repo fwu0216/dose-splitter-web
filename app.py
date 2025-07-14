@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template_string
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
@@ -19,10 +19,10 @@ HTML_TEMPLATE = '''
         .label-inline { display: inline-block; margin-right: 10px; font-weight: bold; color: #333; }
         .row { display: flex; gap: 10px; align-items: center; }
         .result { font-size: 18px; color: #007aff; font-weight: bold; margin-top: 10px; }
-        button { margin-top: 16px; padding: 10px 16px; font-size: 16px; background-color: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        button { padding: 10px 16px; font-size: 16px; background-color: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; }
         .row-btn { display: flex; align-items: center; gap: 10px; }
-        .btn-group { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
-        .btn-group button { flex: 1; padding: 8px; font-size: 14px; }
+        .time-buttons { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .time-buttons button { flex: 1; background-color: #e5f0ff; color: #007aff; }
     </style>
 </head>
 <body>
@@ -50,7 +50,7 @@ HTML_TEMPLATE = '''
                 <input type="time" name="target_time" id="target_time" value="{{ target_time }}">
             </label>
 
-            <div class="btn-group">
+            <div class="time-buttons">
                 <button type="button" onclick="addMinutes(5)">+5min</button>
                 <button type="button" onclick="addMinutes(10)">+10min</button>
                 <button type="button" onclick="addMinutes(15)">+15min</button>
@@ -89,24 +89,22 @@ HTML_TEMPLATE = '''
         });
     };
 
-    // 监听并保存到 localStorage
+    // 保存到 localStorage
     fields.forEach(id => {
         document.getElementById(id).addEventListener('input', e => {
             localStorage.setItem(id, e.target.value);
         });
     });
 
-    // 增加目标分装时间按钮功能
+    // 增加时间函数
     function addMinutes(mins) {
         const timeInput = document.getElementById("target_time");
-        let [hours, minutes] = timeInput.value.split(":").map(Number);
-        let total = hours * 60 + minutes + mins;
-        total = total % (24 * 60); // 防止超过 24 小时
-        const newHours = String(Math.floor(total / 60)).padStart(2, '0');
-        const newMinutes = String(total % 60).padStart(2, '0');
-        const newTime = `${newHours}:${newMinutes}`;
+        const [hh, mm] = timeInput.value.split(":").map(Number);
+        const date = new Date();
+        date.setHours(hh, mm + mins);
+        const newTime = date.toTimeString().slice(0,5);
         timeInput.value = newTime;
-        localStorage.setItem('target_time', newTime);
+        localStorage.setItem("target_time", newTime);
     }
 </script>
 </body>
@@ -121,6 +119,7 @@ def calculate_volume(dose, concentration):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    # 获取数据
     activity = request.form.get('activity', '178.8')
     volume = request.form.get('volume', '10')
     dose = request.form.get('dose', '7.9')
@@ -137,7 +136,7 @@ def index():
         current_activity = decay_activity(float(activity), elapsed, half_life)
         concentration = current_activity / float(volume)
         result_volume = round(calculate_volume(float(dose), concentration), 3)
-    except Exception:
+    except:
         result_volume = None
 
     return render_template_string(HTML_TEMPLATE,
@@ -153,8 +152,3 @@ if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
-
-#if __name__ == '__main__':
- #   import os
-  #  port = int(os.environ.get('PORT', 10000))
-   # app.run(host='0.0.0.0', port=port, debug=False)
