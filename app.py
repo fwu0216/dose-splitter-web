@@ -128,5 +128,5 @@ def index():
 
 if __name__ == '__main__':
     import os
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get('PORT', 10000))  # Render 会提供环境变量 PORT
+    app.run(host='0.0.0.0', port=port, debug=False)
