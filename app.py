@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template_string
 import math
 from datetime import datetime, timedelta
+import os
 
 app = Flask(__name__)
 
@@ -21,8 +22,29 @@ HTML_TEMPLATE = '''
         .result { font-size: 18px; color: #007aff; font-weight: bold; margin-top: 10px; }
         button { padding: 10px 16px; font-size: 16px; background-color: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; }
         .row-btn { display: flex; align-items: center; gap: 10px; }
-        .time-buttons { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-        .time-buttons button { flex: 1; background-color: #e5f0ff; color: #007aff; }
+
+        .time-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .time-buttons button {
+            flex: 1 1 calc(25% - 6px);
+            font-size: 14px;
+            padding: 6px 8px;
+            background-color: #e5f0ff;
+            color: #007aff;
+            border: none;
+            border-radius: 6px;
+        }
+        @media screen and (max-width: 480px) {
+            .time-buttons button {
+                font-size: 12px;
+                padding: 5px 6px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -79,7 +101,6 @@ HTML_TEMPLATE = '''
 <script>
     const fields = ['nuclide', 'activity', 'volume', 'init_time', 'dose', 'target_time'];
 
-    // 恢复本地保存的数据
     window.onload = () => {
         fields.forEach(id => {
             const saved = localStorage.getItem(id);
@@ -89,14 +110,12 @@ HTML_TEMPLATE = '''
         });
     };
 
-    // 保存到 localStorage
     fields.forEach(id => {
         document.getElementById(id).addEventListener('input', e => {
             localStorage.setItem(id, e.target.value);
         });
     });
 
-    // 增加时间函数
     function addMinutes(mins) {
         const timeInput = document.getElementById("target_time");
         const [hh, mm] = timeInput.value.split(":").map(Number);
@@ -148,6 +167,5 @@ def index():
                                   result_volume=result_volume)
 
 if __name__ == '__main__':
-    import os
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
