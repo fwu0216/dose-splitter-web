@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template_string
-from datetime import datetime, timedelta
 import math
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
@@ -10,17 +10,76 @@ HTML_TEMPLATE = '''
 <head>
     <meta charset="UTF-8">
     <title>放射性药物分装计算器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px; background: #f7f9fc; max-width: 480px; margin: auto; }
-        h1 { color: #007aff; font-size: 24px; text-align: center; }
-        .section { background: white; padding: 16px; border-radius: 12px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input, select { padding: 8px; width: 100%; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        .btn-primary { background-color: #007aff; color: white; font-size: 16px; padding: 10px; border: none; border-radius: 8px; width: 100%; margin-top: 10px; cursor: pointer; }
-        .time-buttons { display: flex; justify-content: space-between; margin-top: 10px; gap: 6px; }
-        .time-buttons button { flex: 1; padding: 6px 0; font-size: 14px; background-color: #e5f0ff; color: #007aff; border: none; border-radius: 8px; }
-        .highlight { color: #007aff; font-weight: bold; font-size: 16px; display: block; margin-top: 8px; text-align: center; }
-        .result { margin-top: 10px; font-size: 16px; color: #000; background: #f0f8ff; padding: 10px; border-radius: 8px; white-space: pre-line; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            padding: 12px;
+            margin: 0;
+            background: #f7f9fc;
+        }
+        h1 {
+            color: #007aff;
+            font-size: 20px;
+            text-align: center;
+        }
+        .section {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+        label {
+            font-weight: bold;
+            color: #333;
+            margin-top: 8px;
+            display: block;
+        }
+        input, select {
+            padding: 8px;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 4px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #007aff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .time-buttons {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 10px 0;
+        }
+        .time-buttons button {
+            background-color: #e5f0ff;
+            color: #007aff;
+            flex: 1;
+            padding: 8px;
+        }
+        .result-box {
+            background: #eaf4ff;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .highlight {
+            color: #0057d9;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -39,6 +98,7 @@ HTML_TEMPLATE = '''
             <label>目标剂量 (mCi):
                 <input type="number" step="0.01" name="dose" id="dose" value="{{ dose }}">
             </label>
+
             <label>目标分装时间:
                 <input type="time" name="target_time" id="target_time" value="{{ target_time }}">
             </label>
@@ -50,14 +110,15 @@ HTML_TEMPLATE = '''
                 <button type="button" onclick="addMinutes(20)">+20min</button>
             </div>
 
-            {% if highlight_volume %}
-            <span class="highlight">【{{ highlight_volume }} mL】</span>
+            {% if result_volume %}
+                <div class="highlight" style="text-align:center;">[{{ result_volume }} mL]</div>
             {% endif %}
+            <button type="submit">计算</button>
 
-            <button type="submit" class="btn-primary">计算</button>
-
-            {% if result_text %}
-            <div class="result">{{ result_text }}</div>
+            {% if result_info %}
+                <div class="result-box">
+                    {{ result_info|safe }}
+                </div>
             {% endif %}
         </div>
 
@@ -77,6 +138,7 @@ HTML_TEMPLATE = '''
 <script>
     const fields = ['nuclide', 'activity', 'volume', 'init_time', 'dose', 'target_time'];
 
+    // 恢复本地存储
     window.onload = () => {
         fields.forEach(id => {
             const saved = localStorage.getItem(id);
@@ -86,12 +148,14 @@ HTML_TEMPLATE = '''
         });
     };
 
+    // 保存用户输入
     fields.forEach(id => {
         document.getElementById(id).addEventListener('input', e => {
             localStorage.setItem(id, e.target.value);
         });
     });
 
+    // 增加时间按钮
     function addMinutes(mins) {
         const timeInput = document.getElementById("target_time");
         if (!timeInput.value) return;
@@ -107,14 +171,12 @@ HTML_TEMPLATE = '''
 </html>
 '''
 
+# 计算函数
 def decay_activity(initial_activity, elapsed_minutes, half_life):
     return initial_activity * (0.5 ** (elapsed_minutes / half_life))
 
 def calculate_volume(dose, concentration):
     return dose / concentration if concentration else 0
-
-def format_result(header, activity, concentration, volume):
-    return f"[{header}]\n当前活度: {activity:.2f} mCi\n当前浓度: {concentration:.3f} mCi/mL\n所需抽取体积: {volume:.3f} mL"
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -124,29 +186,41 @@ def index():
     init_time = request.form.get('init_time', '07:40')
     target_time = request.form.get('target_time', '07:50')
     nuclide = request.form.get('nuclide', 'F18')
-    result_text = ""
-    highlight_volume = ""
+    result_volume = None
+    result_info = ""
 
     try:
         half_life = 109.7 if nuclide == 'F18' else 20.3
         t0 = datetime.strptime(init_time, "%H:%M")
-        t_target = datetime.strptime(target_time, "%H:%M")
+        vt = datetime.strptime(target_time, "%H:%M")
+        dose = float(dose)
+        act = float(activity)
+        vol = float(volume)
 
-        results = []
-        for label, offset in [("目标时间 (推荐)", 0), ("提前5分钟", -5), ("延迟5分钟", 5)]:
-            t = t_target + timedelta(minutes=offset)
-            elapsed = (t - t0).total_seconds() / 60
-            cur_act = decay_activity(float(activity), elapsed, half_life)
-            conc = cur_act / float(volume)
-            vol = calculate_volume(float(dose), conc)
-            if label.startswith("目标时间"):
-                highlight_volume = f"{vol:.3f}"
-            results.append(format_result(label, cur_act, conc, vol))
+        def generate_info(label, offset):
+            t = vt + timedelta(minutes=offset)
+            mins = (t - t0).total_seconds() / 60
+            curr_act = decay_activity(act, mins, half_life)
+            conc = curr_act / vol if vol else 0
+            vol_needed = calculate_volume(dose, conc)
+            return f'''
+<b>[{label}]</b><br>
+当前活度: {curr_act:.2f} mCi<br>
+当前浓度: {conc:.3f} mCi/mL<br>
+所需抽取体积: {vol_needed:.3f} mL<br>
+'''
 
-        result_text = "\n\n".join(results)
+        result_info += generate_info("目标时间（推荐）", 0)
+        result_info += generate_info("提前5分钟", -5)
+        result_info += generate_info("延迟5分钟", 5)
+
+        elapsed = (vt - t0).total_seconds() / 60
+        current_activity = decay_activity(act, elapsed, half_life)
+        concentration = current_activity / vol
+        result_volume = round(calculate_volume(dose, concentration), 3)
 
     except Exception:
-        result_text = ""
+        result_volume = None
 
     return render_template_string(HTML_TEMPLATE,
                                   activity=activity,
@@ -155,8 +229,8 @@ def index():
                                   init_time=init_time,
                                   target_time=target_time,
                                   nuclide=nuclide,
-                                  result_text=result_text,
-                                  highlight_volume=highlight_volume)
+                                  result_volume=result_volume,
+                                  result_info=result_info)
 
 if __name__ == '__main__':
     import os
