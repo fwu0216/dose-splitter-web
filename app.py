@@ -11,15 +11,15 @@ HTML_TEMPLATE = '''
     <meta charset="UTF-8">
     <title>放射性药物分装计算器</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px; background: #f7f9fc; }
-        h1 { color: #007aff; font-size: 24px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px; background: #f7f9fc; max-width: 480px; margin: auto; }
+        h1 { color: #007aff; font-size: 24px; text-align: center; }
         .section { background: white; padding: 16px; border-radius: 12px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         label { display: block; margin-top: 10px; font-weight: bold; }
         input, select { padding: 8px; width: 100%; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        .row { display: flex; gap: 10px; }
         .btn-primary { background-color: #007aff; color: white; font-size: 16px; padding: 10px; border: none; border-radius: 8px; width: 100%; margin-top: 10px; cursor: pointer; }
-        .time-buttons { display: flex; justify-content: space-between; margin-top: 10px; gap: 8px; }
+        .time-buttons { display: flex; justify-content: space-between; margin-top: 10px; gap: 6px; }
         .time-buttons button { flex: 1; padding: 6px 0; font-size: 14px; background-color: #e5f0ff; color: #007aff; border: none; border-radius: 8px; }
+        .highlight { color: #007aff; font-weight: bold; font-size: 16px; display: block; margin-top: 8px; text-align: center; }
         .result { margin-top: 10px; font-size: 16px; color: #000; background: #f0f8ff; padding: 10px; border-radius: 8px; white-space: pre-line; }
     </style>
 </head>
@@ -49,6 +49,10 @@ HTML_TEMPLATE = '''
                 <button type="button" onclick="addMinutes(15)">+15min</button>
                 <button type="button" onclick="addMinutes(20)">+20min</button>
             </div>
+
+            {% if highlight_volume %}
+            <span class="highlight">【{{ highlight_volume }} mL】</span>
+            {% endif %}
 
             <button type="submit" class="btn-primary">计算</button>
 
@@ -121,6 +125,7 @@ def index():
     target_time = request.form.get('target_time', '07:50')
     nuclide = request.form.get('nuclide', 'F18')
     result_text = ""
+    highlight_volume = ""
 
     try:
         half_life = 109.7 if nuclide == 'F18' else 20.3
@@ -134,6 +139,8 @@ def index():
             cur_act = decay_activity(float(activity), elapsed, half_life)
             conc = cur_act / float(volume)
             vol = calculate_volume(float(dose), conc)
+            if label.startswith("目标时间"):
+                highlight_volume = f"{vol:.3f}"
             results.append(format_result(label, cur_act, conc, vol))
 
         result_text = "\n\n".join(results)
@@ -148,7 +155,8 @@ def index():
                                   init_time=init_time,
                                   target_time=target_time,
                                   nuclide=nuclide,
-                                  result_text=result_text)
+                                  result_text=result_text,
+                                  highlight_volume=highlight_volume)
 
 if __name__ == '__main__':
     import os
